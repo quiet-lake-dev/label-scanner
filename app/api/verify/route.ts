@@ -39,18 +39,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Image is over 4 MB. Please use a smaller file." }, { status: 400 });
   }
 
-  let parsedApp;
+  let raw: unknown;
   try {
-    parsedApp = applicationSchema.parse(JSON.parse(String(form.get("application") ?? "{}")));
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Invalid application data.";
+    raw = JSON.parse(String(form.get("application") ?? "{}"));
+  } catch {
+    return NextResponse.json({ error: "Application details were not valid JSON." }, { status: 400 });
+  }
+  const parsed = applicationSchema.safeParse(raw);
+  if (!parsed.success) {
+    const message = parsed.error.issues.map((i) => i.message).join(" ");
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json({ error: "The server has no model API key configured." }, { status: 500 });
   }
 
   try {
     const base64 = Buffer.from(await image.arrayBuffer()).toString("base64");
     const { extraction, modelMs } = await extractLabel(base64, image.type as ImageMediaType);
-    const result = buildResult(parsedApp, extraction, { modelMs, totalMs: Date.now() - started });
+    const result = buildResult(parsed.data, extraction, { modelMs, totalMs: Date.now() - started });
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json({ error: describeError(err) }, { status: statusFor(err) });

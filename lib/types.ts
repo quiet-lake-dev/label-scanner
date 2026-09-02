@@ -20,7 +20,9 @@ export interface Application {
 }
 
 export const applicationSchema = z.object({
-  beverageType: z.enum(["distilled_spirits", "wine", "malt_beverage"]),
+  beverageType: z.enum(["distilled_spirits", "wine", "malt_beverage"], {
+    error: "Choose a beverage type.",
+  }),
   brandName: z.string().trim().min(1, "Brand name is required"),
   classType: z.string().trim().default(""),
   alcoholContent: z.string().trim().default(""),
