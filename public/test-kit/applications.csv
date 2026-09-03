@@ -1,0 +1,7 @@
+filename,beverage_type,brand_name,class_type,alcohol_content,net_contents,bottler_name_address,country_of_origin,note
+riverstone-bourbon-label.jpg,Distilled spirits,Riverstone Distilling Co.,Bourbon Whiskey,45% Alc./Vol.,750 mL,"Riverstone Distilling Co., Louisville, Kentucky",,Everything matches the label.
+crescent-harbor-gin-label.jpg,Distilled spirits,Crescent Harbor Distilling Co.,Gin,42% Alc./Vol. (84 Proof),750 mL,"Crescent Harbor Distilling Co., Portland, Maine",United States,"Minor: application says Gin, label says Dry Gin."
+blue-orchard-pinot-noir-label.jpg,Wine,Blue Orchard Cellars,Reserve Pinot Noir,13.5% Alc./Vol.,750 mL,"Blue Orchard Cellars, Napa, California",,Everything matches the label.
+crescent-harbor-gin-bottle.jpg,Distilled spirits,Crescent Harbor Distilling Co.,Dry Gin,42% Alc./Vol.,1 L,"Crescent Harbor Distilling Co., Portland, Maine",,"Major: application says 1 L, bottle says 750 mL."
+pine-coast-harbor-haze-can.jpg,Malt beverage,Pine Coast Brewing Co.,Hazy India Pale Ale,6.5% Alc./Vol.,12 fl oz,"Pine Coast Brewing Co., Portland, Maine",,"Minor: the can prints the beer name under the brewery name, so the tool asks you to confirm the brand. 12 fl oz is accepted as the 355 mL on the can."
+blue-orchard-pinot-noir-bottle.jpg,Wine,Blue Orchard Cellars,Reserve Pinot Noir,14.5% Alc./Vol.,750 mL,"Blue Orchard Cellars, Napa, California",,"Major: application says 14.5%, bottle says 13.5%."

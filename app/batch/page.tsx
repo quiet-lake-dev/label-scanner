@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { StatusBadge } from "@/components/ResultPanel";
+import { RowDetails } from "@/components/RowDetails";
 import { useElapsed } from "@/components/useElapsed";
 import { verifyLabel } from "@/lib/client/api";
 import { parseCsvRecords, toCsv } from "@/lib/csv";
@@ -10,6 +11,7 @@ import type { Application, BeverageType, VerificationResult } from "@/lib/types"
 import { FIELD_LABELS, VERDICT_LABELS } from "@/lib/types";
 
 const CONCURRENCY = 4;
+const TEST_KIT_URL = "/test-kit/label-check-test-kit.zip";
 
 const TEMPLATE_COLUMNS = [
   "filename",
@@ -60,6 +62,7 @@ export default function BatchPage() {
   const [files, setFiles] = useState<Map<string, File>>(new Map());
   const [busy, setBusy] = useState(false);
   const [csvError, setCsvError] = useState<string | null>(null);
+  const [open, setOpen] = useState<Set<number>>(new Set());
   const elapsed = useElapsed(busy);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -80,6 +83,7 @@ export default function BatchPage() {
         setCsvError("No rows found. The CSV needs a 'filename' column plus the application fields.");
       }
       setRows(parsed.map((r) => ({ ...r, state: "waiting" })));
+      setOpen(new Set());
     } catch {
       setCsvError("Could not read that file as CSV.");
     }
@@ -108,6 +112,16 @@ export default function BatchPage() {
       })),
     );
     setCsvError(null);
+    setOpen(new Set());
+  }
+
+  function toggle(i: number) {
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
   }
 
   async function runAll() {
@@ -188,7 +202,14 @@ export default function BatchPage() {
             </button>
           </p>
           {csvError ? <p className="mt-2 text-red-700">{csvError}</p> : null}
-          {rows.length ? <p className="mt-2">{rows.length} applications loaded.</p> : null}
+          {rows.length ? (
+            <p className="mt-2">{rows.length} applications loaded.</p>
+          ) : (
+            <p className="mt-2 text-base text-stone-600">
+              Nothing to hand? <a href={TEST_KIT_URL} download className="underline">Download the test kit</a> (2 MB): six label
+              pictures and a filled-in spreadsheet. Unzip it, then upload the spreadsheet here and the pictures on the right.
+            </p>
+          )}
         </section>
 
         <section className="rounded-lg border border-stone-200 bg-white p-4">
@@ -232,43 +253,76 @@ export default function BatchPage() {
                 <th className="px-3 py-2">File</th>
                 <th className="px-3 py-2">Brand</th>
                 <th className="px-3 py-2">Verdict</th>
-                <th className="px-3 py-2">Details</th>
+                <th className="px-3 py-2">Summary</th>
                 <th className="px-3 py-2">Time</th>
+                <th className="px-3 py-2">
+                  <span className="sr-only">Details</span>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {matched.map((r, i) => (
-                <tr key={i} className="border-t border-stone-200 align-top">
-                  <td className="px-3 py-2 font-mono text-sm">{r.filename}</td>
-                  <td className="px-3 py-2">{r.application.brandName}</td>
-                  <td className="px-3 py-2">
-                    <RowVerdict row={r} />
-                  </td>
-                  <td className="px-3 py-2 text-base text-stone-700">
-                    {r.result ? (
-                      <div className="space-y-1">
-                        <div className="flex flex-wrap gap-1">
-                          {r.result.fields.map((f) => (
-                            <span key={f.field} title={f.note} className="inline-flex items-center gap-1 text-sm">
-                              {f.label}: <StatusBadge status={f.status} />
-                            </span>
-                          ))}
+              {matched.map((r, i) => {
+                const expanded = open.has(i);
+                const canOpen = Boolean(r.result);
+                return [
+                  <tr
+                    key={`row-${i}`}
+                    className={`border-t border-stone-200 align-top ${canOpen ? "cursor-pointer hover:bg-stone-50" : ""}`}
+                    onClick={() => canOpen && toggle(i)}
+                  >
+                    <td className="px-3 py-2 font-mono text-sm">{r.filename}</td>
+                    <td className="px-3 py-2">{r.application.brandName}</td>
+                    <td className="px-3 py-2">
+                      <RowVerdict row={r} />
+                    </td>
+                    <td className="px-3 py-2 text-base text-stone-700">
+                      {r.result ? (
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap gap-1">
+                            {r.result.fields.map((f) => (
+                              <span key={f.field} title={f.note} className="inline-flex items-center gap-1 text-sm">
+                                {f.label}: <StatusBadge status={f.status} />
+                              </span>
+                            ))}
+                          </div>
+                          <ul className="list-disc pl-5">
+                            {r.result.reasons.map((x) => (
+                              <li key={x}>{x}</li>
+                            ))}
+                          </ul>
                         </div>
-                        <ul className="list-disc pl-5">
-                          {r.result.reasons.map((x) => (
-                            <li key={x}>{x}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : r.error ? (
-                      <span className="text-red-700">{r.error}</span>
-                    ) : !r.file ? (
-                      <span className="text-stone-500">No picture with this filename was uploaded.</span>
-                    ) : null}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap">{r.result ? `${(r.result.totalMs / 1000).toFixed(1)} s` : ""}</td>
-                </tr>
-              ))}
+                      ) : r.error ? (
+                        <span className="text-red-700">{r.error}</span>
+                      ) : !r.file ? (
+                        <span className="text-stone-500">No picture with this filename was uploaded.</span>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">{r.result ? `${(r.result.totalMs / 1000).toFixed(1)} s` : ""}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {canOpen ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary px-3 py-1 text-base"
+                          aria-expanded={expanded}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggle(i);
+                          }}
+                        >
+                          {expanded ? "Hide" : "Details"}
+                        </button>
+                      ) : null}
+                    </td>
+                  </tr>,
+                  expanded && r.result ? (
+                    <tr key={`details-${i}`} className="border-t border-stone-200 bg-stone-50">
+                      <td colSpan={6} className="p-4">
+                        <RowDetails file={r.file} result={r.result} />
+                      </td>
+                    </tr>
+                  ) : null,
+                ];
+              })}
             </tbody>
           </table>
         </div>

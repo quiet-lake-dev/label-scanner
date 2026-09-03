@@ -132,6 +132,28 @@ because people tolerate a wait far better when they can see it moving.
 Batch mode runs four labels at a time and fills the table as each finishes,
 so a 200-label batch produces results from the first few seconds onward.
 
+## Batch mode
+
+Sarah's "300 applications at once" is the batch screen: a CSV with one row
+per application and the label pictures, matched by filename. There is no
+system to import from (COLA integration is out of scope), so a spreadsheet is
+the only format an importer's bundle could realistically arrive in. Column
+names are matched loosely and a blank template is one click away.
+
+The table gives a verdict and a one-line summary per row, which is enough to
+sort a batch into approve, look closer, and reject. Any row can be opened to
+show exactly what the single-label screen would show for it, with the picture
+alongside, so an agent never has to re-enter an application to see why it
+was flagged.
+
+A downloadable test kit sits on the page: six pictures (flat artwork and
+photographs of real-looking bottles and a can) with a filled-in CSV. The rows
+are chosen so every verdict appears, including a can whose brand line reads
+"Pine Coast Brewing Co. Harbor Haze" while the application says only "Pine
+Coast Brewing Co.". That one comes back "Needs review" rather than "Likely
+approve", deliberately: the tool cannot know which line is the brand and which
+is the fanciful name, so it says so rather than guessing.
+
 ## Interface
 
 One screen, one button. Picture on the left, application details on the

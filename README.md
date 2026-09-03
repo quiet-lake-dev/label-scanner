@@ -32,6 +32,7 @@ npm run typecheck
 npm run lint
 npm run build && npm start
 node scripts/make-samples.mjs   # re-render the sample labels in public/samples
+node scripts/make-test-kit.mjs  # rebuild public/test-kit from the source pictures
 ```
 
 ## Using it
@@ -48,9 +49,20 @@ outcome.
 
 **Batch.** Upload a CSV with one row per application and a `filename` column,
 then select the label images. Rows are matched to images by filename, checked
-four at a time, and the results can be downloaded as a CSV. A blank template
-is available from the page. Column names are matched loosely (`Brand Name`,
-`brand_name` and `brand name` all work).
+four at a time, and the results can be downloaded as a CSV. Press *Details* on
+any row (or click the row) to see the full result for that label, the same
+side-by-side table as the single-label screen, with the picture beside it. A
+blank template is available from the page. Column names are matched loosely
+(`Brand Name`, `brand_name` and `brand name` all work).
+
+**Test kit.** The batch page links to a small zip (`public/test-kit/`) with
+six label pictures, three flat artwork files and three photographs of bottles
+and a can, plus a filled-in `applications.csv`. Two rows match their labels,
+two have a small discrepancy (a class/type written more briefly on the
+application, and a can that prints the beer name under the brewery name), and
+two are plainly wrong (net contents and alcohol content). The CSV has a `note`
+column saying what to expect from each row; the app ignores it. Unzip, upload
+the CSV, select the six pictures, press *Check*.
 
 ## Deploying
 
@@ -83,5 +95,7 @@ lib/
   *.test.ts           unit tests
 components/           form, image picker, result display
 proxy.ts              redirects to /login when the password cookie is missing
+public/test-kit/      downloadable zip of pictures and a CSV for trying batch mode
 scripts/make-samples.mjs  renders the demo labels from SVG
+scripts/make-test-kit.mjs builds the test kit zip
 ```
