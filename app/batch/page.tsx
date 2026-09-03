@@ -219,7 +219,7 @@ export default function BatchPage() {
         ) : null}
         {rows.length === 0 ? (
           <button type="button" className="text-stone-600 underline" onClick={loadSampleBatch}>
-            Load the four sample labels
+            Load the sample labels
           </button>
         ) : null}
       </div>

@@ -40,8 +40,9 @@ node scripts/make-samples.mjs   # re-render the sample labels in public/samples
 and press *Check label*. You get an overall verdict, a row per field showing
 what the application says next to what was read off the label, and a section
 on the government warning with any wording differences highlighted. The
-"Or try a sample" buttons load four ready-made labels with their application
-details filled in, each demonstrating a different outcome.
+"Or try a sample" buttons load ready-made labels with their application
+details filled in: one realistic label and four flat ones that each show a
+different outcome.
 
 **Batch.** Upload a CSV with one row per application and a `filename` column,
 then select the label images. Rows are matched to images by filename, checked

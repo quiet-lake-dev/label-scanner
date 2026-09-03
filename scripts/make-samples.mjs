@@ -1,7 +1,8 @@
-// Renders the sample labels in public/samples from SVG. Run with:
+// Renders the flat sample labels in public/samples from SVG. Run with:
 //   node scripts/make-samples.mjs
-// These are deliberately clean, flat labels with known contents so the
-// matching rules can be demonstrated against a predictable image.
+// These are deliberately clean labels with known contents so the matching
+// rules can be demonstrated against a predictable image. riverstone.jpg is
+// not generated here; it is an image-generator label kept as a realistic case.
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";

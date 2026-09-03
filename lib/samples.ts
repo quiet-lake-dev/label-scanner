@@ -11,6 +11,21 @@ export interface Sample {
 
 export const SAMPLES: Sample[] = [
   {
+    id: "riverstone",
+    title: "Realistic bourbon label",
+    image: "/samples/riverstone.jpg",
+    expect: "Likely approve",
+    application: {
+      beverageType: "distilled_spirits",
+      brandName: "Riverstone Distilling Co.",
+      classType: "Bourbon Whiskey",
+      alcoholContent: "45% Alc./Vol.",
+      netContents: "750 mL",
+      bottlerNameAddress: "Riverstone Distilling Co., Louisville, Kentucky",
+      countryOfOrigin: "",
+    },
+  },
+  {
     id: "bourbon",
     title: "Bourbon, everything correct",
     image: "/samples/bourbon.png",
