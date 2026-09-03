@@ -54,6 +54,19 @@ function classTypeRule(expected: string, found: string): Pick<FieldResult, "stat
       note: expected.trim() === found.trim() ? "Exact match." : "Same designation; only capitalisation or punctuation differs.",
     };
   }
+  // The model joins a multi-line designation with " / ". If one of the lines
+  // is the designation applied for, the others are extra statements printed
+  // with it (an appellation, a colour class), not a different designation.
+  const segments = found.split(" / ").map((s) => s.trim()).filter(Boolean);
+  if (segments.length > 1) {
+    const others = segments.filter((s) => normalize(s) !== e);
+    if (others.length < segments.length) {
+      return {
+        status: "match",
+        note: `Same designation. Label also prints ${others.map((s) => `"${s}"`).join(" and ")}.`,
+      };
+    }
+  }
   const coverage = tokenCoverage(tokens(expected), tokens(found));
   if (coverage === 1) {
     return {

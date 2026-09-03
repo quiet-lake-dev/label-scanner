@@ -43,7 +43,7 @@ Why not just ask the model "does this label match the application?"
   that fired ("Same wording; only capitalisation differs", "Label shows 6.5%
   alcohol by volume; application says 5.5%"). A skeptical reviewer can check
   the reasoning instead of trusting a black box.
-- **It is testable without the model.** There are 49 unit tests covering the
+- **It is testable without the model.** There are 51 unit tests covering the
   matching rules and the warning check. They run in a quarter of a second
   and cost nothing. The behaviour for "Government Warning" in title case is a
   test, not a hope.
@@ -201,6 +201,12 @@ realistic set does not.
 - Class/type rules differ by beverage category. The beverage type is
   collected but, in this prototype, only feeds the model's context; the
   matching rule is the same for all three.
+- For wine, a varietal name may stand in for the class designation (27 CFR
+  4.34), so "Reserve Pinot Noir" is treated as the class/type and a separate
+  "California Red Wine" line as extra wording, not a different designation.
+  The appellation of origin that must accompany a varietal (27 CFR 4.23) is
+  not checked; the application form has no field for it. It would be the next
+  field to add.
 - Uploaded images are processed in memory and never written anywhere.
 
 ## Limitations and what I would do next

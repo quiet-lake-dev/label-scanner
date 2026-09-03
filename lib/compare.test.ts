@@ -70,6 +70,16 @@ describe("class/type", () => {
   it("rejects a different class", () => {
     expect(cmp("classType", "Kentucky Straight Bourbon Whiskey", "London Dry Gin").status).toBe("mismatch");
   });
+
+  it("matches when one line of a multi-line designation is the one applied for", () => {
+    const r = cmp("classType", "Reserve Pinot Noir", "Reserve Pinot Noir / CALIFORNIA RED WINE");
+    expect(r.status).toBe("match");
+    expect(r.note).toMatch(/also prints "CALIFORNIA RED WINE"/);
+  });
+
+  it("does not match a multi-line designation whose lines are all different", () => {
+    expect(cmp("classType", "Reserve Pinot Noir", "Chardonnay / CALIFORNIA WHITE WINE").status).toBe("mismatch");
+  });
 });
 
 describe("alcohol content", () => {

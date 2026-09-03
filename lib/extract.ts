@@ -20,7 +20,7 @@ const FIELDS_PROMPT = `${COMMON}
 
 Fields:
 - brandName: the brand name, usually the most prominent text. Include a secondary line printed as part of the name directly with it (e.g. "RIVERSTONE" over "DISTILLING CO." is "RIVERSTONE DISTILLING CO.").
-- classType: the class or type designation, e.g. "Kentucky Straight Bourbon Whiskey", "Cabernet Sauvignon", "India Pale Ale", "Table Wine".
+- classType: the class or type designation line only, e.g. "Kentucky Straight Bourbon Whiskey", "Dry Gin", "India Pale Ale", "Table Wine". For wine this is the varietal name when one is printed (e.g. "Reserve Pinot Noir"), otherwise the class name (e.g. "Red Wine"). Leave out taglines, descriptive lines, and appellation or colour statements printed on a separate line (e.g. "Small Batch American Gin" under "DRY GIN", or "CALIFORNIA RED WINE" under a varietal). If the designation genuinely spans several lines, join them with " / ".
 - alcoholContent: the alcohol statement as printed, e.g. "45% Alc./Vol. (90 Proof)" or "12.5% ALC. BY VOL.".
 - netContents: the volume as printed, e.g. "750 mL", "12 FL. OZ.".
 - bottlerNameAddress: the "bottled by" / "distilled by" / "produced by" / "imported by" line with the name and address, as printed.
