@@ -6,7 +6,7 @@ import { ImagePicker } from "@/components/ImagePicker";
 import { ResultPanel } from "@/components/ResultPanel";
 import { useElapsed } from "@/components/useElapsed";
 import { verifyLabel } from "@/lib/client/api";
-import { SAMPLES } from "@/lib/samples";
+import { SAMPLE_GROUPS, SAMPLES } from "@/lib/samples";
 import type { Application, VerificationResult } from "@/lib/types";
 import { FIELD_NAMES } from "@/lib/types";
 
@@ -64,10 +64,14 @@ export default function Home() {
             Or try a sample:
             <select className="field mt-1" value="" disabled={busy} onChange={(e) => loadSample(e.target.value)}>
               <option value="">Choose a sample label</option>
-              {SAMPLES.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.title}
-                </option>
+              {SAMPLE_GROUPS.map((g) => (
+                <optgroup key={g.kind} label={g.title}>
+                  {SAMPLES.filter((s) => s.kind === g.kind).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.title}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </label>

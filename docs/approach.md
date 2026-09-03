@@ -124,8 +124,8 @@ generation at about 130 tokens a second. The JSON for a whole label is around
   long edge before upload. That is enough to read the warning text and takes
   about half a second off the model's time compared with a full-size photo.
 
-Measured end to end on the five samples and four realistic photos, the check
-now takes 3.2 to 4.2 seconds. The exact number shows on screen after every
+Measured end to end on the eight sample labels, the check now takes 3.2 to
+4.2 seconds. The exact number shows on screen after every
 check, and the button counts up in tenths of a second while the model works,
 because people tolerate a wait far better when they can see it moving.
 
@@ -140,8 +140,10 @@ system to import from (COLA integration is out of scope), so a spreadsheet is
 the only format an importer's bundle could realistically arrive in. Column
 names are matched loosely and a blank template is one click away.
 
-The table gives a verdict and a one-line summary per row, which is enough to
-sort a batch into approve, look closer, and reject. Any row can be opened to
+The table gives a verdict per row and a column per check, each holding a
+coloured word (Match, Check, Mismatch, Correct, Problem), so the badges line
+up and a batch can be read down a column as well as across a row. That is
+enough to sort a batch into approve, look closer, and reject. Any row can be opened to
 show exactly what the single-label screen would show for it, with the picture
 alongside, so an agent never has to re-enter an application to see why it
 was flagged.
@@ -172,7 +174,10 @@ and extra words highlighted.
 Type is set larger than usual. Colours are used the conventional way (green,
 amber, red) but never alone: every status also has a word. Sample labels are
 built in behind a single drop-down so a reviewer can see each outcome
-without hunting for test images.
+without hunting for test images: the six realistic pictures from the test
+kit, and two made-up flat labels kept only because they show government
+warning faults (a title-case heading, a reworded statement) that the
+realistic set does not.
 
 ## Tools
 
@@ -181,7 +186,8 @@ without hunting for test images.
 - **Anthropic SDK** for the model call, with zod-defined structured output.
 - **Tailwind** for styling.
 - **vitest** for the unit tests.
-- **sharp** (dev only) to render the sample labels from SVG.
+- **sharp** (dev only) to render the made-up labels from SVG and shrink the
+  test-kit pictures.
 
 ## Assumptions
 

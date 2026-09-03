@@ -1,8 +1,8 @@
-// Renders the flat sample labels in public/samples from SVG. Run with:
+// Renders the two made-up labels in public/samples from SVG. Run with:
 //   node scripts/make-samples.mjs
-// These are deliberately clean labels with known contents so the matching
-// rules can be demonstrated against a predictable image. riverstone.jpg is
-// not generated here; it is an image-generator label kept as a realistic case.
+// Each has a deliberate government-warning fault (a title-case heading, a
+// reworded statement) that the realistic pictures do not show. The realistic
+// pictures in public/samples come from scripts/make-test-kit.mjs.
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
@@ -17,24 +17,6 @@ const WARNING_BODY =
   "drive a car or operate machinery, and may cause health problems.";
 
 const labels = [
-  {
-    file: "bourbon.png",
-    bg: "#f4ecd8",
-    ink: "#2b1d0e",
-    accent: "#8a5a2b",
-    font: "DejaVu Serif, Georgia, serif",
-    lines: [
-      ["OLD TOM DISTILLERY", 64, "bold"],
-      ["Kentucky Straight Bourbon Whiskey", 34, "normal"],
-      ["Aged four years in new charred oak", 24, "italic"],
-      ["45% ALC./VOL. (90 PROOF)", 30, "bold"],
-      ["750 mL", 30, "bold"],
-      ["DISTILLED AND BOTTLED BY", 20, "normal"],
-      ["OLD TOM DISTILLERY, BARDSTOWN, KENTUCKY", 20, "normal"],
-    ],
-    warningHeading: "GOVERNMENT WARNING:",
-    warningBody: WARNING_BODY,
-  },
   {
     file: "wine.png",
     bg: "#fbf7f0",
@@ -52,24 +34,6 @@ const labels = [
     ],
     // Title case heading: this is the rejection Jenny described.
     warningHeading: "Government Warning:",
-    warningBody: WARNING_BODY,
-  },
-  {
-    file: "beer.png",
-    bg: "#1d3b4a",
-    ink: "#f5f1e6",
-    accent: "#e9b949",
-    font: "DejaVu Sans, Helvetica, sans-serif",
-    lines: [
-      ["RIVERBEND BREWING", 60, "bold"],
-      ["India Pale Ale", 40, "normal"],
-      ["Citra and Mosaic hops", 24, "italic"],
-      ["6.5% ALC./VOL.", 32, "bold"],
-      ["12 FL. OZ.", 32, "bold"],
-      ["BREWED AND CANNED BY", 20, "normal"],
-      ["RIVERBEND BREWING CO., PORTLAND, OREGON", 20, "normal"],
-    ],
-    warningHeading: "GOVERNMENT WARNING:",
     warningBody: WARNING_BODY,
   },
   {

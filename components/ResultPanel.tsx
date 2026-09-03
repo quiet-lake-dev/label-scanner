@@ -25,13 +25,21 @@ const STATUS: Record<FieldStatus, { text: string; tone: Tone }> = {
   unreadable: { text: "Unreadable", tone: "muted" },
 };
 
-export function Badge({ tone, children }: { tone: Tone; children: React.ReactNode }) {
-  return <span className={`inline-block rounded px-2 py-0.5 text-base font-medium ${TONE[tone]}`}>{children}</span>;
+export function Badge({ tone, small, children }: { tone: Tone; small?: boolean; children: React.ReactNode }) {
+  return (
+    <span className={`inline-block rounded px-2 py-0.5 font-medium ${small ? "text-sm" : "text-base"} ${TONE[tone]}`}>
+      {children}
+    </span>
+  );
 }
 
-export function StatusBadge({ status }: { status: FieldStatus }) {
+export function StatusBadge({ status, small }: { status: FieldStatus; small?: boolean }) {
   const s = STATUS[status];
-  return <Badge tone={s.tone}>{s.text}</Badge>;
+  return (
+    <Badge tone={s.tone} small={small}>
+      {s.text}
+    </Badge>
+  );
 }
 
 export function VerdictBanner({ result }: { result: VerificationResult }) {

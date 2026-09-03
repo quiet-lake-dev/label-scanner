@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { StatusBadge } from "@/components/ResultPanel";
+import { Badge, StatusBadge } from "@/components/ResultPanel";
 import { RowDetails } from "@/components/RowDetails";
 import { useElapsed } from "@/components/useElapsed";
 import { verifyLabel } from "@/lib/client/api";
 import { parseCsvRecords, toCsv } from "@/lib/csv";
 import { SAMPLES } from "@/lib/samples";
-import type { Application, BeverageType, VerificationResult } from "@/lib/types";
+import type { Application, BeverageType, FieldName, VerificationResult } from "@/lib/types";
 import { FIELD_LABELS, VERDICT_LABELS } from "@/lib/types";
 
 const CONCURRENCY = 4;
@@ -22,6 +22,16 @@ const TEMPLATE_COLUMNS = [
   "net_contents",
   "bottler_name_address",
   "country_of_origin",
+];
+
+/** One results-table column per checked field, in the order they appear on the form. */
+const CHECK_COLUMNS: { field: FieldName; label: string; always: boolean }[] = [
+  { field: "brandName", label: "Brand", always: true },
+  { field: "classType", label: "Class / type", always: true },
+  { field: "alcoholContent", label: "Alcohol", always: true },
+  { field: "netContents", label: "Net contents", always: true },
+  { field: "bottlerNameAddress", label: "Bottler", always: false },
+  { field: "countryOfOrigin", label: "Country", always: false },
 ];
 
 interface Row {
@@ -69,6 +79,11 @@ export default function BatchPage() {
   const matched = useMemo(
     () => rows.map((r) => ({ ...r, file: files.get(r.filename.toLowerCase()) })),
     [rows, files],
+  );
+  // Bottler and country get a column only when some row actually entered them.
+  const checkColumns = useMemo(
+    () => CHECK_COLUMNS.filter((c) => c.always || matched.some((r) => r.application[c.field]?.trim())),
+    [matched],
   );
   const withImage = matched.filter((r) => r.file).length;
   const done = matched.filter((r) => r.state === "done" || r.state === "failed").length;
@@ -248,75 +263,96 @@ export default function BatchPage() {
       {matched.length ? (
         <div className="overflow-x-auto rounded-lg border border-stone-200 bg-white">
           <table className="w-full text-left">
-            <thead className="bg-stone-100 text-base text-stone-600">
+            <thead className="bg-stone-100 text-sm text-stone-600">
               <tr>
-                <th className="px-3 py-2">File</th>
-                <th className="px-3 py-2">Brand</th>
-                <th className="px-3 py-2">Verdict</th>
-                <th className="px-3 py-2">Summary</th>
-                <th className="px-3 py-2">Time</th>
-                <th className="px-3 py-2">
-                  <span className="sr-only">Details</span>
+                <th rowSpan={2} className="min-w-44 px-3 py-2 align-bottom">
+                  Label
                 </th>
+                <th rowSpan={2} className="px-3 py-2 align-bottom">
+                  Verdict
+                </th>
+                <th colSpan={checkColumns.length + 1} className="border-b border-l border-stone-200 px-2 py-1 text-center">
+                  Checks
+                </th>
+                <th rowSpan={2} className="border-l border-stone-200 px-3 py-2 align-bottom">
+                  Notes
+                </th>
+              </tr>
+              <tr className="align-bottom">
+                {checkColumns.map((c, n) => (
+                  <th key={c.field} className={`px-1.5 py-1 font-normal ${n === 0 ? "border-l border-stone-200" : ""}`}>
+                    {c.label}
+                  </th>
+                ))}
+                <th className="px-1.5 py-1 font-normal">Warning</th>
               </tr>
             </thead>
             <tbody>
               {matched.map((r, i) => {
                 const expanded = open.has(i);
                 const canOpen = Boolean(r.result);
+                const w = r.result?.warning;
                 return [
                   <tr
                     key={`row-${i}`}
                     className={`border-t border-stone-200 align-top ${canOpen ? "cursor-pointer hover:bg-stone-50" : ""}`}
                     onClick={() => canOpen && toggle(i)}
                   >
-                    <td className="px-3 py-2 font-mono text-sm">{r.filename}</td>
-                    <td className="px-3 py-2">{r.application.brandName}</td>
                     <td className="px-3 py-2">
-                      <RowVerdict row={r} />
+                      <div>{r.application.brandName}</div>
+                      <div className="font-mono text-xs break-words text-stone-500">{r.filename}</div>
                     </td>
-                    <td className="px-3 py-2 text-base text-stone-700">
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <RowVerdict row={r} />
                       {r.result ? (
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap gap-1">
-                            {r.result.fields.map((f) => (
-                              <span key={f.field} title={f.note} className="inline-flex items-center gap-1 text-sm">
-                                {f.label}: <StatusBadge status={f.status} />
-                              </span>
-                            ))}
-                          </div>
-                          <ul className="list-disc pl-5">
-                            {r.result.reasons.map((x) => (
-                              <li key={x}>{x}</li>
-                            ))}
-                          </ul>
+                        <div className="mt-1 text-xs text-stone-500">
+                          {(r.result.totalMs / 1000).toFixed(1)} s
+                          <span aria-hidden="true"> · </span>
+                          <button
+                            type="button"
+                            className="underline hover:text-stone-900"
+                            aria-expanded={expanded}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggle(i);
+                            }}
+                          >
+                            {expanded ? "Hide details" : "Details"}
+                          </button>
                         </div>
+                      ) : null}
+                    </td>
+                    {checkColumns.map((c, n) => (
+                      <td key={c.field} className={`px-1.5 py-2 whitespace-nowrap ${n === 0 ? "border-l border-stone-200" : ""}`}>
+                        <CheckCell result={r.result} field={c.field} />
+                      </td>
+                    ))}
+                    <td className="px-1.5 py-2 whitespace-nowrap">
+                      {w ? (
+                        <span title={w.note}>
+                          <Badge tone={w.passes ? "good" : "bad"} small>
+                            {w.passes ? "Correct" : "Problem"}
+                          </Badge>
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="min-w-48 border-l border-stone-200 px-3 py-2 text-sm text-stone-700">
+                      {r.result ? (
+                        <ul className="space-y-0.5">
+                          {r.result.reasons.map((x) => (
+                            <li key={x}>{x}</li>
+                          ))}
+                        </ul>
                       ) : r.error ? (
                         <span className="text-red-700">{r.error}</span>
                       ) : !r.file ? (
                         <span className="text-stone-500">No picture with this filename was uploaded.</span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap">{r.result ? `${(r.result.totalMs / 1000).toFixed(1)} s` : ""}</td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      {canOpen ? (
-                        <button
-                          type="button"
-                          className="btn btn-secondary px-3 py-1 text-base"
-                          aria-expanded={expanded}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggle(i);
-                          }}
-                        >
-                          {expanded ? "Hide" : "Details"}
-                        </button>
-                      ) : null}
-                    </td>
                   </tr>,
                   expanded && r.result ? (
                     <tr key={`details-${i}`} className="border-t border-stone-200 bg-stone-50">
-                      <td colSpan={6} className="p-4">
+                      <td colSpan={checkColumns.length + 4} className="p-4">
                         <RowDetails file={r.file} result={r.result} />
                       </td>
                     </tr>
@@ -328,6 +364,24 @@ export default function BatchPage() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** A field's badge, a dash when that field was left blank on the application, nothing before the row has run. */
+function CheckCell({ result, field }: { result?: VerificationResult; field: FieldName }) {
+  if (!result) return null;
+  const f = result.fields.find((x) => x.field === field);
+  if (!f) {
+    return (
+      <span className="text-stone-400" title="Not entered on the application, so not checked">
+        –
+      </span>
+    );
+  }
+  return (
+    <span title={f.note}>
+      <StatusBadge status={f.status} small />
+    </span>
   );
 }
 

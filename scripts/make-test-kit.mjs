@@ -5,7 +5,9 @@
  *
  * Source pictures are read from test_images/ (not committed; they are large
  * generated PNGs). Each is shrunk to a JPEG at 1600px on the long edge, which
- * is still bigger than the app sends to the model.
+ * is still bigger than the app sends to the model. The same JPEGs are also
+ * written to public/samples so the in-app sample drop-down and the kit stay
+ * identical (the application values for them live in lib/samples.ts).
  *
  *   node scripts/make-test-kit.mjs [source-dir]
  */
@@ -18,6 +20,7 @@ import sharp from "sharp";
 const ROOT = path.resolve(import.meta.dirname, "..");
 const SOURCE = path.resolve(process.argv[2] ?? path.join(ROOT, "test_images"));
 const OUT_DIR = path.join(ROOT, "public", "test-kit");
+const SAMPLES_DIR = path.join(ROOT, "public", "samples");
 const ZIP_NAME = "label-check-test-kit.zip";
 
 // Filenames in the kit -> source picture. The CSV below refers to these names.
@@ -119,10 +122,13 @@ fs.mkdirSync(kit);
 for (const [name, src] of Object.entries(PICTURES)) {
   const file = path.join(SOURCE, src);
   if (!fs.existsSync(file)) throw new Error(`Missing ${file}`);
-  await sharp(file)
+  const jpeg = await sharp(file)
     .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: 90 })
-    .toFile(path.join(kit, name));
+    .toBuffer();
+  fs.writeFileSync(path.join(kit, name), jpeg);
+  fs.mkdirSync(SAMPLES_DIR, { recursive: true });
+  fs.writeFileSync(path.join(SAMPLES_DIR, name), jpeg);
   console.log(`  ${src} -> ${name}`);
 }
 fs.writeFileSync(path.join(kit, "applications.csv"), csv);

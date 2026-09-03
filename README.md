@@ -31,8 +31,8 @@ npm test            # unit tests for the matching rules (no API calls)
 npm run typecheck
 npm run lint
 npm run build && npm start
-node scripts/make-samples.mjs   # re-render the sample labels in public/samples
-node scripts/make-test-kit.mjs  # rebuild public/test-kit from the source pictures
+node scripts/make-samples.mjs   # re-render the two made-up labels in public/samples
+node scripts/make-test-kit.mjs  # rebuild public/test-kit and the realistic samples from the source pictures
 ```
 
 ## Using it
@@ -44,16 +44,20 @@ get an overall verdict and one table with a row per field showing what the
 application says next to what was read off the label, ending with the
 government warning and any wording differences highlighted. The "Or try a
 sample" drop-down loads ready-made labels with their application details
-filled in: one realistic label and four flat ones that each show a different
-outcome.
+filled in: the six realistic pictures from the test kit below, plus two flat
+made-up labels with deliberate government-warning faults (a title-case heading
+and a reworded statement), since the realistic set has none to show.
 
 **Batch.** Upload a CSV with one row per application and a `filename` column,
-then select the label images. Rows are matched to images by filename, checked
-four at a time, and the results can be downloaded as a CSV. Press *Details* on
-any row (or click the row) to see the full result for that label, the same
-side-by-side table as the single-label screen, with the picture beside it. A
-blank template is available from the page. Column names are matched loosely
-(`Brand Name`, `brand_name` and `brand name` all work).
+then select the label images. Rows are matched to images by filename and
+checked four at a time. The results table has a verdict per row and one column
+per check (brand, class/type, alcohol, net contents, government warning, plus
+bottler and country when a row entered them), so a batch can be scanned down
+each column. Results can be downloaded as a CSV. Press *Details* on any row (or
+click the row) to see the full result for that label, the same side-by-side
+table as the single-label screen, with the picture beside it. A blank template
+is available from the page. Column names are matched loosely (`Brand Name`,
+`brand_name` and `brand name` all work).
 
 **Test kit.** The batch page links to a small zip (`public/test-kit/`) with
 six label pictures, three flat artwork files and three photographs of bottles
@@ -95,7 +99,8 @@ lib/
   *.test.ts           unit tests
 components/           form, image picker, result display
 proxy.ts              redirects to /login when the password cookie is missing
+public/samples/       pictures behind the sample drop-down (details in lib/samples.ts)
 public/test-kit/      downloadable zip of pictures and a CSV for trying batch mode
-scripts/make-samples.mjs  renders the demo labels from SVG
-scripts/make-test-kit.mjs builds the test kit zip
+scripts/make-samples.mjs  renders the two made-up labels from SVG
+scripts/make-test-kit.mjs builds the test kit zip and the realistic sample pictures
 ```
