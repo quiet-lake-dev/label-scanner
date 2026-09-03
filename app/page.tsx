@@ -6,8 +6,9 @@ import { ImagePicker } from "@/components/ImagePicker";
 import { ResultPanel } from "@/components/ResultPanel";
 import { useElapsed } from "@/components/useElapsed";
 import { verifyLabel } from "@/lib/client/api";
-import { SAMPLES, type Sample } from "@/lib/samples";
+import { SAMPLES } from "@/lib/samples";
 import type { Application, VerificationResult } from "@/lib/types";
+import { FIELD_NAMES } from "@/lib/types";
 
 const EMPTY: Application = {
   beverageType: "distilled_spirits",
@@ -27,7 +28,7 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const elapsed = useElapsed(busy);
 
-  const canSubmit = !!image && app.brandName.trim() !== "" && !busy;
+  const nothingEntered = FIELD_NAMES.every((f) => !app[f]?.trim());
 
   async function check() {
     if (!image) return;
@@ -43,55 +44,48 @@ export default function Home() {
     }
   }
 
-  async function loadSample(s: Sample) {
+  async function loadSample(id: string) {
+    const s = SAMPLES.find((x) => x.id === id);
+    if (!s) return;
     setError(null);
     setResult(null);
-    const res = await fetch(s.image);
-    const blob = await res.blob();
-    setImage(new File([blob], s.image.split("/").pop() ?? "sample.png", { type: blob.type }));
+    const blob = await (await fetch(s.image)).blob();
+    setImage(new File([blob], s.image.split("/").pop() ?? "sample", { type: blob.type }));
     setApp(s.application);
   }
 
   return (
     <div className="space-y-6">
-      <p className="text-lg text-stone-700">
-        Add the label picture, type in what the application says, and press <strong>Check label</strong>.
-      </p>
-
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-2">
         <section>
-          <h2 className="mb-2 text-xl font-semibold">1. Label picture</h2>
+          <h2 className="mb-2 text-xl font-semibold">Label picture</h2>
           <ImagePicker file={image} onChange={setImage} disabled={busy} />
-          <div className="mt-3 text-base text-stone-600">
-            <span className="mr-2">Or try a sample:</span>
-            {SAMPLES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                className="mr-2 mb-1 rounded border border-stone-300 bg-white px-2 py-1 hover:bg-stone-100"
-                disabled={busy}
-                onClick={() => loadSample(s)}
-                title={`Expected: ${s.expect}`}
-              >
-                {s.title}
-              </button>
-            ))}
-          </div>
+          <label className="mt-3 block text-stone-600">
+            Or try a sample:
+            <select className="field mt-1" value="" disabled={busy} onChange={(e) => loadSample(e.target.value)}>
+              <option value="">Choose a sample label</option>
+              {SAMPLES.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.title}
+                </option>
+              ))}
+            </select>
+          </label>
         </section>
 
         <section>
-          <h2 className="mb-2 text-xl font-semibold">2. Application details</h2>
+          <h2 className="mb-2 text-xl font-semibold">What the application says</h2>
           <ApplicationForm value={app} onChange={setApp} disabled={busy} />
         </section>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4">
-        <button type="button" className="btn btn-primary min-w-56 text-xl" disabled={!canSubmit} onClick={check}>
+      <div className="space-y-2">
+        <button type="button" className="btn btn-primary w-full text-2xl lg:w-auto lg:min-w-80" disabled={!image || busy} onClick={check}>
           {busy ? `Reading label… ${elapsed.toFixed(1)} s` : "Check label"}
         </button>
-        {!image && !busy ? <span className="text-stone-600">Add a picture to start.</span> : null}
-        {image && !app.brandName.trim() && !busy ? (
-          <span className="text-stone-600">Enter at least the brand name.</span>
+        {!image && !busy ? <p className="text-stone-600">Add a picture to start.</p> : null}
+        {image && nothingEntered && !busy ? (
+          <p className="text-stone-600">No application details entered, so only the government warning will be checked.</p>
         ) : null}
       </div>
 

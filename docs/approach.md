@@ -24,11 +24,13 @@ The main design decision is to split the work in two.
 
 **Stage one is perception.** The label image goes to a vision model (Claude
 Sonnet 5 through the Anthropic API) with a prompt that says, in effect,
-"transcribe every required field exactly as printed, and tell me how
-confident you are." The response is constrained to a fixed JSON schema using
+"transcribe every required field exactly as printed, and tell me which ones
+were hard to read." The response is constrained to a fixed JSON schema using
 the API's structured output feature, so the shape is guaranteed and the rest
 of the pipeline never has to parse free text. The model is told not to
-correct, normalise, or judge anything.
+correct, normalise, or judge anything. The work is split into two calls that
+run at the same time, one for the label fields and one for the warning
+statement; the reason is speed, covered below.
 
 **Stage two is matching, and it is ordinary TypeScript.** `lib/compare.ts`
 holds one rule per field. `lib/warning.ts` checks the government warning.
@@ -41,7 +43,7 @@ Why not just ask the model "does this label match the application?"
   that fired ("Same wording; only capitalisation differs", "Label shows 6.5%
   alcohol by volume; application says 5.5%"). A skeptical reviewer can check
   the reasoning instead of trusting a black box.
-- **It is testable without the model.** There are 45 unit tests covering the
+- **It is testable without the model.** There are 49 unit tests covering the
   matching rules and the warning check. They run in a quarter of a second
   and cost nothing. The behaviour for "Government Warning" in title case is a
   test, not a hope.
@@ -64,8 +66,16 @@ Why not just ask the model "does this label match the application?"
 | Country of origin | Same country after stripping "product of" and resolving common aliases | | Different country |
 
 A field the model could not find is reported as **not found**, or as
-**unreadable** when the image itself is poor. Optional fields left blank on
-the application are skipped rather than counted against the label.
+**unreadable** when the image is poor or the model said that field was hard
+to make out. A value that was read but flagged as hard to read keeps its
+result and gains a "confirm against the image" note.
+
+Every application field is optional. The agent types in whatever the
+application has and the tool checks those; blank fields are skipped rather
+than counted against the label. Leaving all of them blank is allowed: the
+result then covers the warning statement only, and says so. Nothing in the
+brief makes any single field mandatory, and requiring one would only add a
+manual step to a process that is meant to remove them.
 
 ### The government warning
 
@@ -96,26 +106,51 @@ The tool assists; the agent decides. Language is deliberately soft.
 
 ## Speed
 
-- One model call per label, with the model's effort setting at its lowest.
-  Typical end-to-end time on the samples is a few seconds; the exact number
-  shows on screen after every check.
-- Images are shrunk in the browser before upload. A 4000 pixel phone photo
-  becomes a 1568 pixel JPEG, which is what the model would downsample to
-  anyway. This makes the upload several times smaller.
-- The wait is visible. The button counts up in tenths of a second while the
-  model works. People tolerate a wait far better when they can see it moving.
-- Batch mode runs four labels at a time and fills the table as each finishes,
-  so a 200-label batch produces results from the first few seconds onward.
+The five-second target from the interviews drove the design of the model
+call. Measuring where the time went for a single call showed roughly two
+seconds before the first token (upload plus image processing) and then
+generation at about 130 tokens a second. The JSON for a whole label is around
+370 tokens, so generation was the larger half. Three changes followed:
+
+- **Two calls in parallel** instead of one. The fields and the warning
+  statement each need about half the JSON, so each call finishes in about
+  half the time, and they run together. This doubles the (small) input cost
+  per label, which is a fair trade for the second and a half it saves.
+- **A lean schema.** Per-field confidence scores were replaced with a single
+  list of field names the model found hard to read, which is empty in the
+  common case. Anything the code could derive itself (for example, whether
+  the heading is in capitals) was dropped from the schema.
+- **Smaller images.** Photos are shrunk in the browser to 1200 pixels on the
+  long edge before upload. That is enough to read the warning text and takes
+  about half a second off the model's time compared with a full-size photo.
+
+Measured end to end on the five samples and four realistic photos, the check
+now takes 3.2 to 4.2 seconds. The exact number shows on screen after every
+check, and the button counts up in tenths of a second while the model works,
+because people tolerate a wait far better when they can see it moving.
+
+Batch mode runs four labels at a time and fills the table as each finishes,
+so a 200-label batch produces results from the first few seconds onward.
 
 ## Interface
 
-One screen, two steps, one button. Picture on the left, application details on
-the right, a large "Check label" button underneath, results below that. Type
-is set larger than usual. Colours are used the conventional way (green,
-amber, red) but never alone: every status also has a word.
+One screen, one button. Picture on the left, application details on the
+right, a large "Check label" button underneath, results below that.
 
-Sample labels are built in so a reviewer can see each outcome without hunting
-for test images.
+Only the four fields on every application are shown at first (brand, class
+or type, alcohol content, net contents). Bottler and country of origin sit
+behind a single link, since they are checked less often. Field hints are
+placeholders rather than extra lines of text.
+
+Results are one verdict box and one table. Each application field is a row;
+the government warning is the last row. When the wording is wrong, the
+required statement is shown underneath with missing words struck through
+and extra words highlighted.
+
+Type is set larger than usual. Colours are used the conventional way (green,
+amber, red) but never alone: every status also has a word. Sample labels are
+built in behind a single drop-down so a reviewer can see each outcome
+without hunting for test images.
 
 ## Tools
 

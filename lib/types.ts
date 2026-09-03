@@ -23,7 +23,7 @@ export const applicationSchema = z.object({
   beverageType: z.enum(["distilled_spirits", "wine", "malt_beverage"], {
     error: "Choose a beverage type.",
   }),
-  brandName: z.string().trim().min(1, "Brand name is required"),
+  brandName: z.string().trim().default(""),
   classType: z.string().trim().default(""),
   alcoholContent: z.string().trim().default(""),
   netContents: z.string().trim().default(""),
@@ -31,32 +31,37 @@ export const applicationSchema = z.object({
   countryOfOrigin: z.string().trim().default(""),
 });
 
-/**
- * Shape the vision model must return. Structured outputs guarantee the JSON
- * matches this schema, so the rest of the pipeline can trust it.
- *
- * Every text field is transcribed exactly as printed, no normalisation.
- * `confidence` is the model's own estimate of how clearly it could read it.
- */
-const readField = z.object({
-  value: z.string().nullable(),
-  confidence: z.number().min(0).max(1),
-});
+export const FIELD_NAMES = [
+  "brandName",
+  "classType",
+  "alcoholContent",
+  "netContents",
+  "bottlerNameAddress",
+  "countryOfOrigin",
+] as const;
 
-export const extractionSchema = z.object({
-  brandName: readField,
-  classType: readField,
-  alcoholContent: readField,
-  netContents: readField,
-  bottlerNameAddress: readField,
-  countryOfOrigin: readField,
-  governmentWarning: z.object({
-    present: z.boolean(),
-    verbatimText: z.string().nullable(),
-    headingAllCaps: z.boolean().nullable(),
-    headingBold: z.boolean().nullable(),
-    legible: z.boolean().nullable(),
-  }),
+export type FieldName = (typeof FIELD_NAMES)[number];
+
+/**
+ * Shapes the vision model must return. Structured outputs guarantee the JSON
+ * matches these schemas, so the rest of the pipeline can trust it.
+ *
+ * The label is read in two parallel calls, one per schema, because the time
+ * a call takes is mostly the JSON it writes. Splitting the work roughly halves
+ * the wait. Both schemas are kept deliberately short for the same reason:
+ * every text field is transcribed exactly as printed and nothing else.
+ */
+const printed = z.string().nullable();
+
+export const fieldsSchema = z.object({
+  brandName: printed,
+  classType: printed,
+  alcoholContent: printed,
+  netContents: printed,
+  bottlerNameAddress: printed,
+  countryOfOrigin: printed,
+  /** Fields the model could only read with difficulty. Empty when all were clear. */
+  uncertain: z.array(z.enum(FIELD_NAMES)),
   imageQuality: z.object({
     readable: z.boolean(),
     issues: z.array(
@@ -65,8 +70,20 @@ export const extractionSchema = z.object({
   }),
 });
 
-export type Extraction = z.infer<typeof extractionSchema>;
-export type ReadField = z.infer<typeof readField>;
+export const warningSchema = z.object({
+  present: z.boolean(),
+  verbatimText: z.string().nullable(),
+  headingBold: z.boolean().nullable(),
+  legible: z.boolean().nullable(),
+});
+
+export type LabelFields = z.infer<typeof fieldsSchema>;
+export type WarningExtraction = z.infer<typeof warningSchema>;
+
+/** Both halves, merged. This is what the matching code consumes. */
+export interface Extraction extends LabelFields {
+  governmentWarning: WarningExtraction;
+}
 
 export type FieldStatus =
   | "match"
@@ -74,14 +91,6 @@ export type FieldStatus =
   | "mismatch"
   | "not_found"
   | "unreadable";
-
-export type FieldName =
-  | "brandName"
-  | "classType"
-  | "alcoholContent"
-  | "netContents"
-  | "bottlerNameAddress"
-  | "countryOfOrigin";
 
 export const FIELD_LABELS: Record<FieldName, string> = {
   brandName: "Brand name",
@@ -98,7 +107,8 @@ export interface FieldResult {
   status: FieldStatus;
   expected: string;
   found: string | null;
-  confidence: number;
+  /** The model said this value was hard to read. */
+  uncertain: boolean;
   /** Plain-English explanation of why this status was chosen. */
   note: string;
 }

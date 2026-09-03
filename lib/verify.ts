@@ -22,24 +22,42 @@ export function decideVerdict(
     return { verdict: "cannot_verify", reasons };
   }
 
-  if (!warning.passes) reasons.push(`Government warning: ${warning.note}`);
+  // Anything that on its own would get the label sent back.
+  const problems: string[] = [];
+  if (!warning.passes) problems.push(`Government warning: ${warning.note}`);
   for (const f of fields) {
-    if (f.status === "mismatch") reasons.push(`${f.label}: ${f.note}`);
+    if (f.status === "mismatch") problems.push(`${f.label}: ${f.note}`);
   }
-  if (reasons.length > 0) return { verdict: "likely_reject", reasons };
 
+  // Things an agent should look at before approving.
+  const concerns: string[] = [];
   for (const f of fields) {
-    if (f.status === "minor_discrepancy") reasons.push(`${f.label}: ${f.note}`);
-    if (f.status === "not_found") reasons.push(`${f.label}: ${f.note}`);
-    if (f.status === "unreadable") reasons.push(`${f.label}: ${f.note}`);
+    if (f.status !== "match" && f.status !== "mismatch") concerns.push(`${f.label}: ${f.note}`);
   }
   if (warning.advisories.some((a) => a.includes("not in bold"))) {
-    reasons.push("Government warning heading may not be bold.");
+    concerns.push("Government warning heading may not be bold.");
   }
-  if (reasons.length > 0) return { verdict: "needs_review", reasons };
 
-  reasons.push("Every field matches and the government warning is correct.");
-  return { verdict: "likely_approve", reasons };
+  const scopeNote =
+    fields.length === 0
+      ? ["No application details were entered, so only the government warning was checked."]
+      : [];
+
+  if (problems.length > 0) {
+    return { verdict: "likely_reject", reasons: [...problems, ...scopeNote] };
+  }
+  if (concerns.length > 0) {
+    return { verdict: "needs_review", reasons: [...concerns, ...scopeNote] };
+  }
+  return {
+    verdict: "likely_approve",
+    reasons: [
+      fields.length === 0
+        ? "The government warning is correct."
+        : "Every field matches and the government warning is correct.",
+      ...scopeNote,
+    ],
+  };
 }
 
 export function buildResult(

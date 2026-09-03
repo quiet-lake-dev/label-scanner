@@ -37,12 +37,14 @@ node scripts/make-samples.mjs   # re-render the sample labels in public/samples
 ## Using it
 
 **One label.** Drop in a picture of the label, type what the application says,
-and press *Check label*. You get an overall verdict, a row per field showing
-what the application says next to what was read off the label, and a section
-on the government warning with any wording differences highlighted. The
-"Or try a sample" buttons load ready-made labels with their application
-details filled in: one realistic label and four flat ones that each show a
-different outcome.
+and press *Check label*. Every field is optional: fill in the ones you want
+compared, or leave them all blank to check just the government warning. You
+get an overall verdict and one table with a row per field showing what the
+application says next to what was read off the label, ending with the
+government warning and any wording differences highlighted. The "Or try a
+sample" drop-down loads ready-made labels with their application details
+filled in: one realistic label and four flat ones that each show a different
+outcome.
 
 **Batch.** Upload a CSV with one row per application and a `filename` column,
 then select the label images. Rows are matched to images by filename, checked

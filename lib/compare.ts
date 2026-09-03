@@ -12,18 +12,10 @@ import {
   tokenCoverage,
   tokens,
 } from "./text";
-import type {
-  Application,
-  Extraction,
-  FieldName,
-  FieldResult,
-  ReadField,
-} from "./types";
-import { FIELD_LABELS } from "./types";
+import type { Extraction, FieldName, FieldResult } from "./types";
+import { FIELD_LABELS, FIELD_NAMES } from "./types";
 
-const LOW_CONFIDENCE = 0.5;
-
-type Rule = (expected: string, found: string, app: Application) => Pick<FieldResult, "status" | "note">;
+type Rule = (expected: string, found: string) => Pick<FieldResult, "status" | "note">;
 
 function nameRule(expected: string, found: string): Pick<FieldResult, "status" | "note"> {
   const e = normalize(expected);
@@ -206,20 +198,14 @@ const RULES: Record<FieldName, Rule> = {
 export function compareField(
   field: FieldName,
   expected: string,
-  read: ReadField,
-  app: Application,
+  found: string | null,
+  uncertain: boolean,
   imageReadable: boolean,
 ): FieldResult {
-  const base = {
-    field,
-    label: FIELD_LABELS[field],
-    expected,
-    found: read.value,
-    confidence: read.confidence,
-  };
+  const base = { field, label: FIELD_LABELS[field], expected, found, uncertain };
 
-  if (read.value === null || read.value.trim() === "") {
-    if (!imageReadable || read.confidence < LOW_CONFIDENCE) {
+  if (found === null || found.trim() === "") {
+    if (!imageReadable || uncertain) {
       return {
         ...base,
         status: "unreadable",
@@ -229,29 +215,18 @@ export function compareField(
     return { ...base, status: "not_found", note: "Not found on the label." };
   }
 
-  const outcome = RULES[field](expected, read.value, app);
-  const note =
-    read.confidence < LOW_CONFIDENCE
-      ? `${outcome.note} Low-confidence read; confirm against the image.`
-      : outcome.note;
+  const outcome = RULES[field](expected, found);
+  const note = uncertain ? `${outcome.note} Hard to read; confirm against the image.` : outcome.note;
   return { ...base, ...outcome, note };
 }
 
 /**
- * Compare every field the application supplied. Optional fields left blank
- * on the application are skipped rather than reported as missing.
+ * Compare every field the application supplied. Fields left blank on the
+ * application are skipped rather than reported as missing.
  */
-export function compareAll(app: Application, ex: Extraction): FieldResult[] {
+export function compareAll(app: Partial<Record<FieldName, string>>, ex: Extraction): FieldResult[] {
   const readable = ex.imageQuality.readable;
-  const pairs: [FieldName, string | undefined][] = [
-    ["brandName", app.brandName],
-    ["classType", app.classType],
-    ["alcoholContent", app.alcoholContent],
-    ["netContents", app.netContents],
-    ["bottlerNameAddress", app.bottlerNameAddress],
-    ["countryOfOrigin", app.countryOfOrigin],
-  ];
-  return pairs
-    .filter(([, expected]) => expected && expected.trim() !== "")
-    .map(([field, expected]) => compareField(field, expected!.trim(), ex[field], app, readable));
+  return FIELD_NAMES.filter((field) => app[field]?.trim()).map((field) =>
+    compareField(field, app[field]!.trim(), ex[field], ex.uncertain.includes(field), readable),
+  );
 }

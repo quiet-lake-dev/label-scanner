@@ -6,7 +6,6 @@ import type { Extraction } from "./types";
 const gw = (overrides: Partial<Extraction["governmentWarning"]>): Extraction["governmentWarning"] => ({
   present: true,
   verbatimText: REQUIRED_TEXT,
-  headingAllCaps: true,
   headingBold: true,
   legible: true,
   ...overrides,
@@ -79,7 +78,7 @@ describe("decideVerdict", () => {
     status,
     expected: "x",
     found: "x",
-    confidence: 0.9,
+    uncertain: false,
     note: "n",
   });
   const good = { readable: true, issues: [] as Extraction["imageQuality"]["issues"] };
@@ -101,6 +100,15 @@ describe("decideVerdict", () => {
     const v = decideVerdict([field("match")], bad, good);
     expect(v.verdict).toBe("likely_reject");
     expect(v.reasons[0]).toMatch(/Government warning/);
+  });
+
+  it("checks only the warning when no application fields were given", () => {
+    const v = decideVerdict([], ok, good);
+    expect(v.verdict).toBe("likely_approve");
+    expect(v.reasons.some((r) => r.includes("only the government warning"))).toBe(true);
+
+    const bad = checkWarning(gw({ present: false, verbatimText: null }));
+    expect(decideVerdict([], bad, good).verdict).toBe("likely_reject");
   });
 
   it("cannot verify an unreadable image", () => {

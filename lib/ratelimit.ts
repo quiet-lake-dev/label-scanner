@@ -3,7 +3,9 @@
  * single serverless instance; a real deployment would back this with a store.
  */
 const WINDOW_MS = 60_000;
-const MAX_PER_WINDOW = 40;
+// Batch mode runs four labels at a time at roughly three seconds each, so a
+// busy agent legitimately makes 80 or so requests a minute.
+const MAX_PER_WINDOW = 150;
 
 const hits = new Map<string, number[]>();
 
