@@ -173,10 +173,13 @@ model works. People wait better when they can see the clock moving.
   entered. The tool checks the label against the application, not the other
   way round.
 - Alcohol content is compared exactly. The tolerances in the regulations
-  (0.3% for spirits, for example) are about the liquid versus its label, not
-  the label versus its paperwork.
-- Country of origin only matters for imports, so it is optional and skipped
-  when blank. Same for bottler.
+  (0.3 percentage points for spirits, for example) are about the liquid
+  versus its label, not the label versus its paperwork.
+- Every application field is optional and a blank one is skipped, not
+  counted against the label. Country of origin is blank by design on
+  domestic products. Bottler name and address is mandatory on every label,
+  but it sits behind the "more fields" link because agents check it less
+  often, not because it matters less.
 - Class/type rules genuinely differ by beverage category. The beverage type is
   collected but in this prototype only feeds the model's context; the
   matching rule is the same for all three.
@@ -206,6 +209,9 @@ model works. People wait better when they can see the clock moving.
   Co.". The tool cannot know which line is the brand and which is the
   fanciful name, so it says so instead of guessing. An agent will clear that
   in two seconds; a false approve would be worse.
+- **Cold starts.** The API route runs as a serverless function, so the first
+  check after a quiet spell adds a second or two while it spins up. Later
+  checks land in the three-to-four-second range.
 - **Rate limiting** is in memory per server instance. Fine for a prototype,
   not for real traffic.
 - **Batch matching is by filename.** Supporting a zip upload and matching on
