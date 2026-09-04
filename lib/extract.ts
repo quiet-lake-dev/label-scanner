@@ -8,7 +8,7 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { fieldsSchema, warningSchema, type Extraction } from "./types";
+import { BEVERAGE_TYPES, fieldsSchema, warningSchema, type BeverageType, type Extraction } from "./types";
 
 export const MODEL = process.env.LABEL_MODEL || "claude-sonnet-5";
 
@@ -44,10 +44,18 @@ function getClient(): Anthropic {
   return client;
 }
 
+function beverageLabel(t: BeverageType): string {
+  return BEVERAGE_TYPES.find((b) => b.value === t)?.label ?? t;
+}
+
 export async function extractLabel(
   imageBase64: string,
   mediaType: ImageMediaType,
+  beverageType: BeverageType,
 ): Promise<{ extraction: Extraction; modelMs: number }> {
+  // The application says what kind of product this is. Telling the model helps
+  // it pick the right designation line (varietal for wine, style for beer).
+  const context = `The application says this is a ${beverageLabel(beverageType).toLowerCase()} label.`;
   const image = {
     type: "image" as const,
     source: { type: "base64" as const, media_type: mediaType, data: imageBase64 },
@@ -62,7 +70,7 @@ export async function extractLabel(
       max_tokens: 1500,
       system: FIELDS_PROMPT,
       output_config: { ...effort, format: zodOutputFormat(fieldsSchema) },
-      messages: [{ role: "user", content: [image, { type: "text", text: "Transcribe the label fields." }] }],
+      messages: [{ role: "user", content: [image, { type: "text", text: `${context} Transcribe the label fields.` }] }],
     }),
     getClient().messages.parse({
       model: MODEL,

@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
   try {
     const base64 = Buffer.from(await image.arrayBuffer()).toString("base64");
-    const { extraction, modelMs } = await extractLabel(base64, image.type as ImageMediaType);
+    const { extraction, modelMs } = await extractLabel(base64, image.type as ImageMediaType, parsed.data.beverageType);
     const result = buildResult(parsed.data, extraction, { modelMs, totalMs: Date.now() - started });
     return NextResponse.json(result);
   } catch (err) {

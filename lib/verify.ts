@@ -34,8 +34,12 @@ export function decideVerdict(
   for (const f of fields) {
     if (f.status !== "match" && f.status !== "mismatch") concerns.push(`${f.label}: ${f.note}`);
   }
-  if (warning.advisories.some((a) => a.includes("not in bold"))) {
-    concerns.push("Government warning heading may not be bold.");
+  // Bold is required but the model is unreliable on it, so anything short of
+  // a confident "bold" is a reason to look rather than a reason to reject.
+  if (warning.passes && warning.boldStatus === "not_bold") {
+    concerns.push("Government warning heading may not be bold. Confirm by eye.");
+  } else if (warning.passes && warning.boldStatus === "unknown") {
+    concerns.push("Could not tell whether the government warning heading is bold. Confirm by eye.");
   }
 
   const scopeNote =

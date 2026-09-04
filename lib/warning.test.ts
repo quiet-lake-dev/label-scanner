@@ -59,7 +59,13 @@ describe("checkWarning", () => {
   it("surfaces bold uncertainty as an advisory, not a failure", () => {
     const r = checkWarning(gw({ headingBold: false }));
     expect(r.status).toBe("ok");
+    expect(r.boldStatus).toBe("not_bold");
     expect(r.advisories[0]).toMatch(/not in bold/);
+
+    const unknown = checkWarning(gw({ headingBold: null }));
+    expect(unknown.status).toBe("ok");
+    expect(unknown.boldStatus).toBe("unknown");
+    expect(unknown.advisories[0]).toMatch(/Could not tell/);
   });
 });
 
@@ -93,6 +99,20 @@ describe("decideVerdict", () => {
 
   it("rejects on a mismatch", () => {
     expect(decideVerdict([field("mismatch")], ok, good).verdict).toBe("likely_reject");
+  });
+
+  it("asks for review when the heading may not be bold", () => {
+    const notBold = checkWarning(gw({ headingBold: false }));
+    const v = decideVerdict([field("match")], notBold, good);
+    expect(v.verdict).toBe("needs_review");
+    expect(v.reasons[0]).toMatch(/may not be bold/);
+  });
+
+  it("asks for review when the model cannot tell whether the heading is bold", () => {
+    const unknown = checkWarning(gw({ headingBold: null }));
+    const v = decideVerdict([field("match")], unknown, good);
+    expect(v.verdict).toBe("needs_review");
+    expect(v.reasons[0]).toMatch(/Could not tell/);
   });
 
   it("rejects on a bad warning even if fields match", () => {

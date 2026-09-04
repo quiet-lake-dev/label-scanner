@@ -34,7 +34,7 @@ Then open http://localhost:3000. If `APP_PASSWORD` is blank the login screen
 is skipped, which is what you want locally.
 
 ```bash
-npm test             # 51 unit tests for the matching rules, no network
+npm test             # 53 unit tests for the matching rules, no network
 npm run typecheck
 npm run lint
 npm run build && npm start
@@ -153,7 +153,8 @@ tokens of JSON, so generation was the bigger half. Three changes:
   Plenty to read the warning text, and about half a second faster than a
   full-size photo.
 
-End to end on the eight samples: 3.2 to 4.2 seconds. The measured time shows
+End to end on the eight samples: 3 to 5 seconds, varying run to run with
+the API rather than with the label. The measured time shows
 on screen after every check, and the button counts up in tenths while the
 model works. People wait better when they can see the clock moving.
 
@@ -181,8 +182,8 @@ model works. People wait better when they can see the clock moving.
   but it sits behind the "more fields" link because agents check it less
   often, not because it matters less.
 - Class/type rules genuinely differ by beverage category. The beverage type is
-  collected but in this prototype only feeds the model's context; the
-  matching rule is the same for all three.
+  collected and passed to the model as context when it reads the label, but
+  the matching rule is the same for all three.
 - For wine, a varietal can stand in for the class designation (27 CFR 4.34),
   so "Reserve Pinot Noir" is the class/type and a separate "California Red
   Wine" line is treated as extra wording rather than a conflicting

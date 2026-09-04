@@ -4,7 +4,7 @@
  * The statement has to appear word for word, and the words "GOVERNMENT
  * WARNING" have to be in capitals and bold. Title case is a rejection.
  */
-import type { DiffToken, Extraction, WarningResult } from "./types";
+import type { BoldStatus, DiffToken, Extraction, WarningResult } from "./types";
 
 export const HEADING = "GOVERNMENT WARNING:";
 
@@ -58,14 +58,22 @@ export function diffWords(required: string[], actual: string[]): DiffToken[] {
   return out;
 }
 
+function boldStatusOf(headingBold: boolean | null): BoldStatus {
+  if (headingBold === true) return "bold";
+  if (headingBold === false) return "not_bold";
+  return "unknown";
+}
+
 export function checkWarning(gw: Extraction["governmentWarning"]): WarningResult {
   const found = gw.verbatimText?.trim() || null;
+  const boldStatus = boldStatusOf(gw.headingBold);
   const advisories: string[] = [];
 
   if (!gw.present || !found) {
     return {
       status: "missing",
       passes: false,
+      boldStatus,
       found,
       diff: [],
       advisories,
@@ -83,6 +91,7 @@ export function checkWarning(gw: Extraction["governmentWarning"]): WarningResult
     return {
       status: "heading_missing",
       passes: false,
+      boldStatus,
       found,
       diff: diffWords(words(REQUIRED_TEXT), words(found)),
       advisories,
@@ -97,6 +106,7 @@ export function checkWarning(gw: Extraction["governmentWarning"]): WarningResult
     return {
       status: "heading_not_caps",
       passes: false,
+      boldStatus,
       found,
       diff: diffWords(words(REQUIRED_TEXT), words(found)),
       advisories,
@@ -116,6 +126,7 @@ export function checkWarning(gw: Extraction["governmentWarning"]): WarningResult
     return {
       status: "wording_differs",
       passes: false,
+      boldStatus,
       found,
       diff,
       advisories,
@@ -125,15 +136,16 @@ export function checkWarning(gw: Extraction["governmentWarning"]): WarningResult
 
   // Bold and prominence are visual judgements a vision model is not reliable on,
   // so they are surfaced as things to look at rather than pass/fail.
-  if (gw.headingBold === false) {
+  if (boldStatus === "not_bold") {
     advisories.push('The model thinks "GOVERNMENT WARNING:" is not in bold type. Confirm by eye; bold is required.');
-  } else if (gw.headingBold === null) {
+  } else if (boldStatus === "unknown") {
     advisories.push("Could not tell whether the heading is bold. Confirm by eye; bold is required.");
   }
 
   return {
     status: "ok",
     passes: true,
+    boldStatus,
     found,
     diff,
     advisories,

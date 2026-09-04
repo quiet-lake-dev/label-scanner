@@ -126,10 +126,14 @@ export interface DiffToken {
   text: string;
 }
 
+/** The model's view of the heading's weight. Anything but "bold" needs a human eye. */
+export type BoldStatus = "bold" | "not_bold" | "unknown";
+
 export interface WarningResult {
   status: WarningStatus;
   /** Whether the text passes the mandatory checks (present, heading, wording). */
   passes: boolean;
+  boldStatus: BoldStatus;
   found: string | null;
   /** Word-level diff of the found text against the required text. */
   diff: DiffToken[];
