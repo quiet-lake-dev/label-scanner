@@ -136,9 +136,10 @@ so a 200-label batch produces results from the first few seconds onward.
 
 Sarah's "300 applications at once" is the batch screen: a CSV with one row
 per application and the label pictures, matched by filename. There is no
-system to import from (COLA integration is out of scope), so a spreadsheet is
-the only format an importer's bundle could realistically arrive in. Column
-names are matched loosely and a blank template is one click away.
+system to import from (COLA integration is out of scope) and the brief does
+not say what an importer's bundle looks like, so a spreadsheet plus pictures
+is my best guess at a format the office could produce today. Column names
+are matched loosely and a blank template is one click away.
 
 The table gives a verdict per row and a column per check, each holding a
 coloured word (Match, Check, Mismatch, Correct, Problem), so the badges line
@@ -221,12 +222,15 @@ realistic set does not.
   the heading region.
 - **Rate limiting** is in memory per server instance, which is fine for a
   prototype and not for real traffic.
-- **Batch matching is by filename.** That is how the importer's bundle
-  usually arrives, but it would be worth supporting a zip upload and
-  matching on an application number.
-- **Beverage-specific rules.** Wine between 7% and 14% may say "table wine"
-  instead of a percentage; malt beverages may omit alcohol content in some
-  states. A next step would be to encode those exceptions per beverage type.
+- **Batch matching is by filename.** The brief doesn't say how an importer's
+  bundle actually arrives, so a CSV plus loose pictures is a guess. A zip
+  upload and matching on application number would be the next thing to
+  support, whichever turns out to be closer.
+- **Beverage-specific rules.** Wine at 14% or under may say "table wine"
+  instead of a percentage; on malt beverages the alcohol statement is
+  optional under the federal rule and only mandatory where a state requires
+  it. Today both come back "not found" and the verdict is "Needs review". A
+  next step would be to encode those exceptions per beverage type.
 - **Poor photographs.** The model copes reasonably with angle and glare and
   reports what it saw; the rules downgrade to "unreadable" rather than
   guessing. Genuinely bad images still need a better photo, as today.

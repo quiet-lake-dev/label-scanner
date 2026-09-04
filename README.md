@@ -189,9 +189,9 @@ model works. People wait better when they can see the clock moving.
   designation. The appellation that must accompany a varietal (27 CFR 4.23)
   is not checked; the application form has no field for it. That would be the
   next field to add.
-- Batch input is a CSV plus loose image files, matched by filename. With COLA
-  integration out of scope, a spreadsheet is the realistic shape of an
-  importer's bundle.
+- Batch input is a CSV plus loose image files, matched by filename. The brief
+  doesn't say how an importer's bundle arrives, and COLA integration is out
+  of scope, so this is a guess at a format the office could produce today.
 - Images are capped at 4 MB after the browser-side shrink, and the API route
   is limited to 60 seconds. Both are generous for a single label.
 
@@ -215,10 +215,13 @@ model works. People wait better when they can see the clock moving.
 - **Rate limiting** is in memory per server instance. Fine for a prototype,
   not for real traffic.
 - **Batch matching is by filename.** Supporting a zip upload and matching on
-  application number would be the obvious next step.
-- **Beverage-specific exceptions** are not encoded. Wine between 7% and 14%
-  may say "table wine" instead of a percentage; malt beverages may omit
-  alcohol content in some states. Those belong in per-category rules.
+  application number would be the obvious next step, whichever turns out to
+  be closer to how bundles really arrive.
+- **Beverage-specific exceptions** are not encoded. Wine at 14% or under may
+  say "table wine" instead of a percentage; on malt beverages the alcohol
+  statement is optional under the federal rule and only mandatory where a
+  state requires it. Today both come back "not found" and land in "Needs
+  review". Those belong in per-category rules.
 - **Bad photographs.** The model copes reasonably with angle and glare and
   reports what it saw; the rules downgrade to "unreadable" rather than guess.
   A genuinely bad image still needs a better photo, same as today.
